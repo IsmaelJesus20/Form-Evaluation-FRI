@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de llamada - SAT FRIDEC</title>
+    <style>
+        :root {
+            --bg-color: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-muted: #666666;
+            --border-color: #e2e8f0;
+            
+            --color-frio: #3b82f6; /* Azul */
+            --color-chapa: #f97316; /* Naranja */
+            --color-consulta: #64748b; /* Gris */
+            
+            --color-baja: #22c55e; /* Verde */
+            --color-media: #eab308; /* Amarillo */
+            --color-alta: #ef4444; /* Rojo */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .call-id {
+            text-align: center;
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            word-break: break-all;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-main);
+        }
+
+        .toggle-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .toggle-btn {
+            min-height: 48px;
+            border: 2px solid var(--border-color);
+            background-color: transparent;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.5rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Tipo de incidencia */
+        .toggle-btn[data-group="tipo"][data-value="frio"].selected {
+            border-color: var(--color-frio);
+            background-color: var(--color-frio);
+            color: white;
+        }
+        .toggle-btn[data-group="tipo"][data-value="chapa"].selected {
+            border-color: var(--color-chapa);
+            background-color: var(--color-chapa);
+            color: white;
+        }
+        .toggle-btn[data-group="tipo"][data-value="consulta"].selected {
+            border-color: var(--color-consulta);
+            background-color: var(--color-consulta);
+            color: white;
+        }
+
+        /* Urgencia */
+        .toggle-btn[data-group="urgencia"][data-value="baja"].selected {
+            border-color: var(--color-baja);
+            background-color: var(--color-baja);
+            color: white;
+        }
+        .toggle-btn[data-group="urgencia"][data-value="media"].selected {
+            border-color: var(--color-media);
+            background-color: var(--color-media);
+            color: white;
+        }
+        .toggle-btn[data-group="urgencia"][data-value="alta"].selected {
+            border-color: var(--color-alta);
+            background-color: var(--color-alta);
+            color: white;
+        }
+
+        .input-text {
+            width: 100%;
+            min-height: 48px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-text:focus {
+            outline: none;
+            border-color: var(--color-frio);
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-family: inherit;
+            font-size: 1rem;
+            resize: vertical;
+            transition: border-color 0.2s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--color-frio);
+        }
+
+        .char-counter {
+            text-align: right;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .submit-btn {
+            width: 100%;
+            min-height: 48px;
+            background-color: var(--color-frio);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .submit-btn:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .submit-btn:not(:disabled):active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            color: var(--color-alta);
+            font-size: 0.875rem;
+            text-align: center;
+            margin-top: 0.75rem;
+            display: none;
+        }
+
+        .success-message {
+            text-align: center;
+            padding: 2rem 0;
+            display: none;
+        }
+
+        .success-icon {
+            color: var(--color-baja);
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .success-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--color-baja);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-details {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .fatal-error {
+            text-align: center;
+            color: var(--color-alta);
+            padding: 2rem;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 100%;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="form-container" class="container">
+        <h1>Evaluación de llamada</h1>
+
+        <div id="evaluation-form">
+            <div class="section-title">Tipo de incidencia *</div>
+            <div class="toggle-group" id="tipo-group">
+                <button type="button" class="toggle-btn" data-group="tipo" data-value="frio">Frío</button>
+                <button type="button" class="toggle-btn" data-group="tipo" data-value="chapa">Chapa</button>
+                <button type="button" class="toggle-btn" data-group="tipo" data-value="consulta">Consulta</button>
+            </div>
+
+            <div class="section-title">Urgencia *</div>
+            <div class="toggle-group" id="urgencia-group">
+                <button type="button" class="toggle-btn" data-group="urgencia" data-value="baja">Baja</button>
+                <button type="button" class="toggle-btn" data-group="urgencia" data-value="media">Media</button>
+                <button type="button" class="toggle-btn" data-group="urgencia" data-value="alta">Alta</button>
+            </div>
+
+            <div class="section-title">Comentarios (opcional)</div>
+            <div class="textarea-wrapper" style="margin-bottom: 1.5rem;">
+                <textarea id="comentario" placeholder="Acción a tomar, notas..." maxlength="500"></textarea>
+                <div class="char-counter"><span id="char-count">500</span> caracteres restantes</div>
+            </div>
+
+            <div class="section-title">ID llamada *</div>
+            <input type="text" id="call-id-input" class="input-text" placeholder="Introduce el ID de la llamada">
+
+            <button type="button" id="submit-btn" class="submit-btn" disabled>Enviar</button>
+            <div id="error-msg" class="error-message">Error al enviar. Inténtalo de nuevo.</div>
+            <div id="cors-msg" class="error-message" style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">Si el error persiste, asegúrate de que el Webhook en n8n tiene activada la opción "Enable CORS" y que el workflow está activo (o usa la URL de test).</div>
+        </div>
+
+        <div id="success-container" class="success-message">
+            <div class="success-icon">✓</div>
+            <div class="success-title">Evaluación guardada</div>
+            <div class="success-details" id="success-details"></div>
+        </div>
+    </div>
+
+    <script>
+        const WEBHOOK_URL = "https://mvpoh-n8n.ew1xnt.easypanel.host/webhook/014868a9-9b01-4741-a010-3899adf9ca6c";
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elementos del DOM
+            const formContainer = document.getElementById('form-container');
+            const evaluationForm = document.getElementById('evaluation-form');
+            const successContainer = document.getElementById('success-container');
+            const successDetails = document.getElementById('success-details');
+            const submitBtn = document.getElementById('submit-btn');
+            const errorMsg = document.getElementById('error-msg');
+            const corsMsg = document.getElementById('cors-msg');
+            const comentarioInput = document.getElementById('comentario');
+            const callIdInput = document.getElementById('call-id-input');
+            const charCountDisplay = document.getElementById('char-count');
+            const toggleBtns = document.querySelectorAll('.toggle-btn');
+
+            // Estado del formulario
+            let state = {
+                callId: "",
+                tipo: null,
+                urgencia: null,
+                comentario: ""
+            };
+
+            // 1. Obtener callId de la URL (opcional ahora)
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlCallId = urlParams.get('callId');
+            
+            if (urlCallId) {
+                state.callId = urlCallId;
+                callIdInput.value = urlCallId;
+            }
+
+            // 2. Lógica de los botones toggle
+            toggleBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const group = btn.getAttribute('data-group');
+                    const value = btn.getAttribute('data-value');
+
+                    // Desmarcar todos los del mismo grupo
+                    document.querySelectorAll(`.toggle-btn[data-group="${group}"]`).forEach(b => {
+                        b.classList.remove('selected');
+                    });
+
+                    // Marcar el seleccionado
+                    btn.classList.add('selected');
+                    
+                    // Actualizar estado
+                    state[group] = value;
+                    
+                    // Validar formulario
+                    validateForm();
+                });
+            });
+
+            // 3. Lógica de los inputs de texto
+            comentarioInput.addEventListener('input', (e) => {
+                const text = e.target.value;
+                state.comentario = text;
+                const remaining = 500 - text.length;
+                charCountDisplay.textContent = remaining;
+            });
+
+            callIdInput.addEventListener('input', (e) => {
+                state.callId = e.target.value.trim();
+                validateForm();
+            });
+
+            // 4. Validación para habilitar/deshabilitar botón
+            function validateForm() {
+                if (state.tipo && state.urgencia && state.callId) {
+                    submitBtn.disabled = false;
+                } else {
+                    submitBtn.disabled = true;
+                }
+            }
+
+            // 5. Envío del formulario
+            submitBtn.addEventListener('click', async () => {
+                if (!state.tipo || !state.urgencia || !state.callId) return;
+
+                // UI de carga
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Enviando...";
+                errorMsg.style.display = 'none';
+                corsMsg.style.display = 'none';
+
+                const payload = {
+                    callId: state.callId,
+                    tipo: state.tipo,
+                    urgencia: state.urgencia,
+                    comentario: state.comentario.trim()
+                };
+
+                try {
+                    const queryParams = new URLSearchParams(payload).toString();
+                    const response = await fetch(`${WEBHOOK_URL}?${queryParams}`, {
+                        method: 'GET'
+                    });
+
+                    if (response.ok) {
+                        // Éxito
+                        evaluationForm.style.display = 'none';
+                        successContainer.style.display = 'block';
+                        
+                        // Formatear texto para mostrar
+                        const tipoText = state.tipo.charAt(0).toUpperCase() + state.tipo.slice(1);
+                        const urgenciaText = state.urgencia.charAt(0).toUpperCase() + state.urgencia.slice(1);
+                        successDetails.textContent = `Tipo: ${tipoText} | Urgencia: ${urgenciaText}`;
+                    } else {
+                        throw new Error('Respuesta no exitosa del servidor');
+                    }
+                } catch (error) {
+                    console.error('Error al enviar:', error);
+                    // Error UI
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = "Enviar";
+                    errorMsg.style.display = 'block';
+                    
+                    if (error.message === 'Failed to fetch') {
+                        document.getElementById('cors-msg').style.display = 'block';
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
